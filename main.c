@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include "functions.c"
+#include "functions.h"
 
 // TODO: Make a Makefile for the project 
 
@@ -55,18 +55,12 @@ void printLoad(int max)
 void print(InstInfo *inst, int count)
 {
 	int i, j;
-	printf("Instruction %d: %d\n",count,inst->inst);
-	printf("%s\n\n",inst->string);
-	printf("Fields:\nrd: %d\nrs: %d\nrt: %d\nimm: %d\n\n",
-		inst->fields.rd, inst->fields.rs, inst->fields.rt, inst->fields.imm);
-	printf("Control Bits:\nalu: %d\nmw: %d\nmr: %d\nmtr: %d\nasrc: %d\nbt: %d\nrdst: %d\nrw: %d\n\n",
-		inst->signals.aluop, inst->signals.mw, inst->signals.mr, inst->signals.mtr, inst->signals.asrc,
-		inst->signals.btype, inst->signals.rdst, inst->signals.rw);
-	printf("ALU Result: %d\n\n",inst->aluout);
-	if (inst->signals.mr == 1)
-		printf("Mem Result: %d\n\n",inst->memout);
-	else
-		printf("Mem Result: X\n\n");
+	int x = 0;
+	printf("Cycle %d:\n",count);
+	printf("Fetch instruction: %s\n",inst->string);
+	printf("Decode instruction: %s\n", inst->string);
+        printf("Memory instruction: %s\n", inst->string);
+	printf("Writeback instruction: %s\n", inst->string);
 	for(i=0;i<8;i++)
 	{
 		for(j=0;j<32;j+=8)

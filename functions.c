@@ -128,7 +128,7 @@ void decode(InstInfo *instruction)
 	// fill in the signals and fields
 	int val = instruction->inst;
 
-	instruction->fields.op      = (val >> 26) & 0x03f;
+    instruction->fields.op      = (val >> 26) & 0x03f;
     instruction->fields.rs      = (val >> 21) & 0x01f;
     instruction->fields.rt      = (val >> 16) & 0x01f;		
     instruction->fields.rd      = (val >> 11) & 0x01f;
