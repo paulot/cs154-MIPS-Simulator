@@ -24,7 +24,7 @@ typedef struct _fields{
         int func;
 } Fields;
 
-/* this is all of the information for a single instruction */
+/* this is all of the informmemoutation for a single instruction */
 typedef struct _instinfo{
         int inst;
         Signals signals;
@@ -55,10 +55,17 @@ void writeback(InstInfo *);
  void print(InstInfo *, int);
  void printLoad(int);
 
+// new print function to be used to print during pipeline
+void printP2(InstInfo *inst0, InstInfo *inst1, InstInfo *inst2, InstInfo *inst3, InstInfo *inst4,  int count);
+
+
 extern int pc;
 extern int instmem[100];
 extern int datamem[1000];
 extern int regfile[32];
+
+//this is for storing the instructions used during the stages of pipeline
+extern InstInfo * pipelineInsts[5];
 
 #endif
 
