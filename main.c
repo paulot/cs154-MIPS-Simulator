@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 		memory(instPtr);
 		writeback(instPtr);
 		print(instPtr,instnum++);
-                //printP2(pipelineInsts[0], pipelineInsts[1], pipelineInsts[2], pipelineInsts[3], pipelineInsts[4], instnum);
 	}
 	
 	// put in your own variables
@@ -86,7 +85,7 @@ void printP2(InstInfo *inst0, InstInfo *inst1, InstInfo *inst2, InstInfo *inst3,
 	int i, j;
 	printf("Cycle %d:\n",count);
 	if(inst0->inst != 0)
-		printf("Fetch instruction: %s\n", inst0->string);
+		printf("Fetch instruction: %d\n", inst0->inst);
 	else
 		printf("Fetch instruction: \n");
 	if(inst1->inst != 0)
