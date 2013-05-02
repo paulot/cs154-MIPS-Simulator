@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include "functions.c"
+#include "functions.h"
 
 InstInfo * pipelineInsts[5];
 
@@ -17,13 +17,13 @@ int main(int argc, char *argv[])
 {
 	InstInfo fetchInst;
 	InstInfo decodeInst;
-    decodeInst.inst = 0;
+        decodeInst.inst = 0;
 	InstInfo executeInst;
-    executeInst.inst = 0;
+        executeInst.inst = 0;
 	InstInfo memoryInst;
-    memoryInst.inst = 0;
+        memoryInst.inst = 0;
 	InstInfo writebackInst;
-    writebackInst.inst = 0;
+        writebackInst.inst = 0;
 	InstInfo *instPtr = &fetchInst;
 
 	int instnum = 0;
@@ -38,11 +38,11 @@ int main(int argc, char *argv[])
 	maxpc = load(argv[1]);
 	//printLoad(maxpc);
 
-    pipelineInsts[FETCH]   = instPtr;
-    pipelineInsts[DECODE]  = &decodeInst;
-    pipelineInsts[EXECUTE] = &executeInst;
-    pipelineInsts[MEMORY]  = &memoryInst;
-    pipelineInsts[WRITE]   = &writebackInst;
+        pipelineInsts[FETCH]   = instPtr;
+        pipelineInsts[DECODE]  = &decodeInst;
+        pipelineInsts[EXECUTE] = &executeInst;
+        pipelineInsts[MEMORY]  = &memoryInst;
+        pipelineInsts[WRITE]   = &writebackInst;
 
 	while (pc <= maxpc + 4) {
 		fetch(pipelineInsts[FETCH]);
@@ -51,24 +51,45 @@ int main(int argc, char *argv[])
 		memory(pipelineInsts[MEMORY]);
 		writeback(pipelineInsts[WRITE]);
 
-        printP2(pipelineInsts[FETCH],
+                printP2(pipelineInsts[FETCH],
                 pipelineInsts[DECODE],
                 pipelineInsts[EXECUTE],
                 pipelineInsts[MEMORY],
                 pipelineInsts[WRITE],
                 pc - 1);
 
-        // Fill the remainder of the pipeline
-        writebackInst   = *pipelineInsts[MEMORY];
-        memoryInst      = *pipelineInsts[EXECUTE];
-        executeInst     = *pipelineInsts[DECODE];
-        decodeInst      = *pipelineInsts[FETCH];
-        if (instnum <= maxpc) instnum++;
-        if (instnum > maxpc)  fetchInst.inst = 0;
-        pipelineInsts[FETCH]   = instPtr;
+		// Fill the remainder of the pipeline
+		writebackInst   = *pipelineInsts[MEMORY];
+		memoryInst      = *pipelineInsts[EXECUTE];
+		executeInst     = *pipelineInsts[DECODE];
+		decodeInst      = *pipelineInsts[FETCH];
+		if (instnum <= maxpc) instnum++;
+		if (instnum > maxpc)  fetchInst.inst = 0;
+		pipelineInsts[FETCH]   = instPtr;
 
-	}
-	
+		//declare var's for MUX
+		int forward1 = 0;
+		int forward2 = 0;
+		//check for execute dependencies
+		if (pipelineInsts[DECODE] != 0 && pipelineInsts[EXECUTE] != 0) {
+			if (pipelineInsts[EXECUTE]->fields.rd == pipelineInsts[DECODE]->fields.rt)
+				forward1 = 2;
+			if (pipelineInsts[EXECUTE]->fields.rd == pipelineInsts[DECODE]->fields.rs)
+				forward2 = 2;
+		}
+		//check for memory dependencies
+		if (pipelineInsts[DECODE] != 0 && pipelineInsts[MEMORY] != 0) {
+			if (pipelineInsts[MEMORY]->fields.rd == pipelineInsts[DECODE]->fields.rt)
+				forward1 = 1;	
+			if (pipelineInsts[MEMORY]->fields.rd == pipelineInsts[DECODE]->fields.rs)
+				forward2 = 1;
+		}
+		//MUX to choose ALU inputs between either rs & rt or last ALU output (forwarding)
+		pipelineInsts[EXECUTE]->input1 = (forward1 == 1 || 2) ? pipelineInsts[EXECUTE]->aluout : regfile[pipelineInsts[EXECUTE]->fields.rs]; 
+		pipelineInsts[EXECUTE]->input2 = (forward1 == 1 || 2) ? pipelineInsts[EXECUTE]->aluout : regfile[pipelineInsts[EXECUTE]->fields.rt]; 
+
+        }
+
 	// put in your own variables
 	printf("Cycles: %d\n", pc);
 	printf("Instructions Executed: %d\n", maxpc + 1);
