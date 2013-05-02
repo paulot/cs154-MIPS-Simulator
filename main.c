@@ -2,14 +2,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include "functions.h"
+#include "functions.c"
 
 InstInfo * pipelineInsts[5];
 
+typedef enum { FETCH   = 0,
+               DECODE  = 1,
+               EXECUTE = 2, 
+               MEMORY  = 3,
+               WRITE   = 4
+             } Instructions;
+
 int main(int argc, char *argv[])
 {
-	InstInfo curInst;
-	InstInfo *instPtr = &curInst;
+	InstInfo fetchInst;
+	InstInfo decodeInst;
+    decodeInst.inst = 0;
+	InstInfo executeInst;
+    executeInst.inst = 0;
+	InstInfo memoryInst;
+    memoryInst.inst = 0;
+	InstInfo writebackInst;
+    writebackInst.inst = 0;
+	InstInfo *instPtr = &fetchInst;
+
 	int instnum = 0;
 	int maxpc;
 	FILE *program;
@@ -22,19 +38,40 @@ int main(int argc, char *argv[])
 	maxpc = load(argv[1]);
 	printLoad(maxpc);
 
-	while (pc <= maxpc)
-	{
-		fetch(instPtr);
-		decode(instPtr);
-		execute(instPtr);
-		memory(instPtr);
-		writeback(instPtr);
-		print(instPtr,instnum++);
+    pipelineInsts[FETCH]   = instPtr;
+    pipelineInsts[DECODE]  = &decodeInst;
+    pipelineInsts[EXECUTE] = &executeInst;
+    pipelineInsts[MEMORY]  = &memoryInst;
+    pipelineInsts[WRITE]   = &writebackInst;
+
+	while (pc <= maxpc + 4) {
+		fetch(pipelineInsts[FETCH]);
+		decode(pipelineInsts[DECODE]);
+		execute(pipelineInsts[EXECUTE]);
+		memory(pipelineInsts[MEMORY]);
+		writeback(pipelineInsts[WRITE]);
+
+        printP2(pipelineInsts[FETCH],
+                pipelineInsts[DECODE],
+                pipelineInsts[EXECUTE],
+                pipelineInsts[MEMORY],
+                pipelineInsts[WRITE],
+                pc);
+
+        // Fill the remainder of the pipeline
+        writebackInst   = *pipelineInsts[MEMORY];
+        memoryInst      = *pipelineInsts[EXECUTE];
+        executeInst     = *pipelineInsts[DECODE];
+        decodeInst      = *pipelineInsts[FETCH];
+        if (instnum <= maxpc) instnum++;
+        if (instnum > maxpc)  fetchInst.inst = 0;
+        pipelineInsts[FETCH]   = instPtr;
+
 	}
 	
 	// put in your own variables
-//	printf("Cycles: %d\n", );
-//	printf("Instructions Executed: %d\n", );
+	printf("Cycles: %d\n", pc + 1);
+	printf("Instructions Executed: %d\n", maxpc + 1);
 	exit(0);
 }
 

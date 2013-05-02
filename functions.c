@@ -21,6 +21,8 @@
 #define is_j       instruction->fields.op == 36
 #define is_jal     instruction->fields.op == 34
 
+#define nullCheck  if (instruction == NULL) return;
+
 // these are the structures used in this simulator
 
 
@@ -48,6 +50,7 @@ typedef enum {  INV = -1 ,
                 SUB = 5,
                 SLT = 6          
              } ALUOps;
+
 
 typedef enum {  BGE = 1, JAL = 2, J = 3 } Jumps;
 
@@ -102,7 +105,6 @@ int load(char *filename)
     fclose(fin);
 	return maxpc - 1;
 }
-
 /* fetch
  *
  * This fetches the next instruction and updates the program counter.
@@ -125,6 +127,8 @@ void fetch(InstInfo *instruction)
  */
 void decode(InstInfo *instruction)
 {
+    nullCheck;
+
 	// fill in the signals and fields
 	int val = instruction->inst;
 
@@ -285,6 +289,8 @@ void decode(InstInfo *instruction)
 
 void execute(InstInfo *instruction)
 {
+    nullCheck;
+
     int in1 = instruction->s1data;
     int in2 = (getFormat(instruction) == I_format) ? instruction->fields.imm : 
                                                      instruction->s2data;
@@ -331,6 +337,8 @@ void execute(InstInfo *instruction)
  */
 void memory(InstInfo *instruction)
 {
+    nullCheck;
+
     // Does the instruction read memory?
     if (instruction->signals.mr == 1) {
 		instruction->memout = datamem[instruction->aluout / 4];
@@ -348,9 +356,8 @@ void memory(InstInfo *instruction)
  */
 void writeback(InstInfo *instruction)
 {
-    /*instruction->destreg = (instruction->signals.rdst == 1) ? instruction->fields.rd :
-                            (instruction->signals.rdst == 0) ? instruction->fields.rt :
-                              -1;*/
+    nullCheck;
+
     if (instruction->signals.rw == 1) {  // Register is supposeed to be written
         if (instruction->destreg == -1) printf("ERROR in the simulator!\n"), exit(-1); // Total comma hack
         if (instruction->signals.mtr == 0) 
