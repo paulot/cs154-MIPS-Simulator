@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	}
 
 	maxpc = load(argv[1]);
-	printLoad(maxpc);
+	//printLoad(maxpc);
 
     pipelineInsts[FETCH]   = instPtr;
     pipelineInsts[DECODE]  = &decodeInst;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
                 pipelineInsts[EXECUTE],
                 pipelineInsts[MEMORY],
                 pipelineInsts[WRITE],
-                pc);
+                pc - 1);
 
         // Fill the remainder of the pipeline
         writebackInst   = *pipelineInsts[MEMORY];
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	}
 	
 	// put in your own variables
-	printf("Cycles: %d\n", pc + 1);
+	printf("Cycles: %d\n", pc);
 	printf("Instructions Executed: %d\n", maxpc + 1);
 	exit(0);
 }
