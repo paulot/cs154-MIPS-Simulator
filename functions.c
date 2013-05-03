@@ -21,7 +21,7 @@
 #define is_j       instruction->fields.op == 36
 #define is_jal     instruction->fields.op == 34
 
-#define nullCheck  if (instruction == NULL) return;
+#define nullCheck  if (instruction == NULL || instruction->inst == 0) return;
 
 // these are the structures used in this simulator
 
@@ -274,6 +274,7 @@ void decode(InstInfo *instruction)
         case (I_format) :
             instruction->input1  = instruction->fields.rs;
             instruction->s1data  = regfile[instruction->fields.rs];
+            instruction->input2  = instruction->fields.rt;
             instruction->s2data  = regfile[instruction->fields.rt];
             instruction->destreg = instruction->fields.rt;
             break;
@@ -341,12 +342,16 @@ void memory(InstInfo *instruction)
 
     // Does the instruction read memory?
     if (instruction->signals.mr == 1) {
+        // printf("\n\nReading position %d\n", instruction->aluout / 4);
 		instruction->memout = datamem[instruction->aluout / 4];
+        // printf("val is %d\n\n", instruction->memout);
 	}
     
     // Does the instruction write memory?
     if (instruction->signals.mw == 1) {
+        // printf("\n\nWriting %d to %d\n\n", instruction->s2data, instruction->aluout / 4);
         datamem[instruction->aluout / 4] = instruction->s2data;
+        instruction->memout = instruction->s2data;
     }
 }
 

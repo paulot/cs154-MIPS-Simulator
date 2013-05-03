@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include "functions.h"
+#include "functions.c"
 
 InstInfo * pipelineInsts[5];
 
@@ -12,6 +12,18 @@ typedef enum { FETCH   = 0,
                MEMORY  = 3,
                WRITE   = 4
              } Instructions;
+
+#define isEmpty(step) pipelineInsts[step]->inst == 0
+
+// Defining booleans
+typedef int bool;
+#define true  1
+#define false 0
+
+// Let's just make this c++ already....
+#define not !
+#define and &&
+#define or  ||
 
 int main(int argc, char *argv[])
 {
@@ -38,20 +50,23 @@ int main(int argc, char *argv[])
 	maxpc = load(argv[1]);
 	//printLoad(maxpc);
 
-        pipelineInsts[FETCH]   = instPtr;
-        pipelineInsts[DECODE]  = &decodeInst;
-        pipelineInsts[EXECUTE] = &executeInst;
-        pipelineInsts[MEMORY]  = &memoryInst;
-        pipelineInsts[WRITE]   = &writebackInst;
+    pipelineInsts[FETCH]   = instPtr;
+    pipelineInsts[DECODE]  = &decodeInst;
+    pipelineInsts[EXECUTE] = &executeInst;
+    pipelineInsts[MEMORY]  = &memoryInst;
+    pipelineInsts[WRITE]   = &writebackInst;
+
+    // Structure to forward registers
+    int forwardReg[2];
 
 	while (pc <= maxpc + 4) {
-		fetch(pipelineInsts[FETCH]);
-		decode(pipelineInsts[DECODE]);
-		execute(pipelineInsts[EXECUTE]);
-		memory(pipelineInsts[MEMORY]);
 		writeback(pipelineInsts[WRITE]);
+		memory(pipelineInsts[MEMORY]);
+		execute(pipelineInsts[EXECUTE]);
+		decode(pipelineInsts[DECODE]);
+		fetch(pipelineInsts[FETCH]);
 
-                printP2(pipelineInsts[FETCH],
+        printP2(pipelineInsts[FETCH],
                 pipelineInsts[DECODE],
                 pipelineInsts[EXECUTE],
                 pipelineInsts[MEMORY],
@@ -59,36 +74,66 @@ int main(int argc, char *argv[])
                 pc - 1);
 
 		// Fill the remainder of the pipeline
-		writebackInst   = *pipelineInsts[MEMORY];
-		memoryInst      = *pipelineInsts[EXECUTE];
-		executeInst     = *pipelineInsts[DECODE];
-		decodeInst      = *pipelineInsts[FETCH];
+		writebackInst = *pipelineInsts[MEMORY];
+		memoryInst    = *pipelineInsts[EXECUTE];
+		executeInst   = *pipelineInsts[DECODE];
+		decodeInst    = *pipelineInsts[FETCH];
 		if (instnum <= maxpc) instnum++;
 		if (instnum > maxpc)  fetchInst.inst = 0;
 		pipelineInsts[FETCH]   = instPtr;
 
-		//declare var's for MUX
-		int forward1 = 0;
-		int forward2 = 0;
-		//check for execute dependencies
-		if (pipelineInsts[DECODE] != 0 && pipelineInsts[EXECUTE] != 0) {
-			if (pipelineInsts[EXECUTE]->fields.rd == pipelineInsts[DECODE]->fields.rt)
-				forward1 = 2;
-			if (pipelineInsts[EXECUTE]->fields.rd == pipelineInsts[DECODE]->fields.rs)
-				forward2 = 2;
-		}
-		//check for memory dependencies
-		if (pipelineInsts[DECODE] != 0 && pipelineInsts[MEMORY] != 0) {
-			if (pipelineInsts[MEMORY]->fields.rd == pipelineInsts[DECODE]->fields.rt)
-				forward1 = 1;	
-			if (pipelineInsts[MEMORY]->fields.rd == pipelineInsts[DECODE]->fields.rs)
-				forward2 = 1;
-		}
-		//MUX to choose ALU inputs between either rs & rt or last ALU output (forwarding)
-		pipelineInsts[EXECUTE]->input1 = (forward1 == 1 || 2) ? pipelineInsts[EXECUTE]->aluout : regfile[pipelineInsts[EXECUTE]->fields.rs]; 
-		pipelineInsts[EXECUTE]->input2 = (forward1 == 1 || 2) ? pipelineInsts[EXECUTE]->aluout : regfile[pipelineInsts[EXECUTE]->fields.rt]; 
+        // Begin pipelining
+        // Detect RAW
 
+        // RAW happends from memory to execute, we need to check 
+        // if the instruction that was last in execute (now at memory)
+        // has a dependency with the instruction currently at execute
+        // For example:
+        // R2 <- R1 + R3   | x-- m
+        // R4 <- R2 + R3   |   ->x
+        if (not isEmpty(MEMORY) and not isEmpty(EXECUTE)) {
+            // Check for RAW based on type of instruction
+            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input1) {
+                // printf("FORWARDING THIS MOTHERFUCKER\n\n");
+                if (pipelineInsts[EXECUTE]->signals.mtr == 0) { // Forward aluout
+                    pipelineInsts[EXECUTE]->s1data = pipelineInsts[MEMORY]->aluout;
+                    // printf("THE NEW S1 is: %d\n\n", pipelineInsts[EXECUTE]->s1data);
+                }
+            } 
+            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input2) {
+                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                    pipelineInsts[EXECUTE]->s2data = pipelineInsts[MEMORY]->aluout;
+            } 
+            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->destreg) {
+                if (pipelineInsts[EXECUTE]->signals.mw == 1) {
+                    pipelineInsts[EXECUTE]->s2data = (pipelineInsts[MEMORY]->signals.mtr == 0) ?
+                                                        pipelineInsts[MEMORY]->aluout :
+                                                        pipelineInsts[MEMORY]->memout;
+                }
+            }
         }
+        // Detect a writeback to memory forward (just happend in simulator lol)
+        if (not isEmpty(WRITE) and not isEmpty(EXECUTE)) {
+            if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->input1) {
+                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                    pipelineInsts[EXECUTE]->s1data = pipelineInsts[WRITE]->aluout;
+            } 
+            if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->input2) {
+                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                    pipelineInsts[EXECUTE]->s2data = pipelineInsts[WRITE]->aluout;
+            } 
+            if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->destreg) {
+                if (pipelineInsts[EXECUTE]->signals.mw == 1) {
+                    // printf ("FORWARDING DATA\n");
+                    pipelineInsts[EXECUTE]->s2data = (pipelineInsts[WRITE]->signals.mtr == 0) ?
+                                                        pipelineInsts[WRITE]->aluout :
+                                                        pipelineInsts[WRITE]->memout;
+                    // printf ("forwarding %d\n", pipelineInsts[EXECUTE]->s2data);
+                }
+            }
+        }
+
+    }
 
 	// put in your own variables
 	printf("Cycles: %d\n", pc);
