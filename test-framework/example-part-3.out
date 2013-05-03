@@ -1,0 +1,152 @@
+Cycle 0:
+Fetch instruction: 1879638006
+Decode instruction: 
+Execute instruction: 
+Memory instruction: 
+Writeback instruction: 
+$0:    0 $8:    0 $16:    0 $24:    0 
+$1:    0 $9:    0 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 1:
+Fetch instruction: 1879638019
+Decode instruction: subi $8, $0, -10
+Execute instruction: 
+Memory instruction: 
+Writeback instruction: 
+$0:    0 $8:    0 $16:    0 $24:    0 
+$1:    0 $9:    0 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 2:
+Fetch instruction: 134742028
+Decode instruction: subi $9, $0, 3
+Execute instruction: subi $8, $0, -10
+Memory instruction: 
+Writeback instruction: 
+$0:    0 $8:    0 $16:    0 $24:    0 
+$1:    0 $9:    0 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 3:
+Fetch instruction: 420085762
+Decode instruction: sw $8, 12 ($0)
+Execute instruction: subi $9, $0, 3
+Memory instruction: subi $8, $0, -10
+Writeback instruction: 
+$0:    0 $8:    0 $16:    0 $24:    0 
+$1:    0 $9:    0 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 4:
+Fetch instruction: -1052147702
+Decode instruction: lw $10, 2 ($8)
+Execute instruction: sw $8, 12 ($0)
+Memory instruction: subi $9, $0, 3
+Writeback instruction: subi $8, $0, -10
+$0:    0 $8:   10 $16:    0 $24:    0 
+$1:    0 $9:    0 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 5:
+Fetch instruction: 
+Decode instruction: add $16, $10, $9
+Execute instruction: lw $10, 2 ($8)
+Memory instruction: sw $8, 12 ($0)
+Writeback instruction: subi $9, $0, 3
+$0:    0 $8:   10 $16:    0 $24:    0 
+$1:    0 $9:   -3 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 6:
+Fetch instruction: 
+Decode instruction: add $16, $10, $9
+Execute instruction: 
+Memory instruction: lw $10, 2 ($8)
+Writeback instruction: sw $8, 12 ($0)
+$0:    0 $8:   10 $16:    0 $24:    0 
+$1:    0 $9:   -3 $17:    0 $25:    0 
+$2:    0 $10:    0 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 7:
+Fetch instruction: 
+Decode instruction: 
+Execute instruction: add $16, $10, $9
+Memory instruction: 
+Writeback instruction: lw $10, 2 ($8)
+$0:    0 $8:   10 $16:    0 $24:    0 
+$1:    0 $9:   -3 $17:    0 $25:    0 
+$2:    0 $10:   10 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 8:
+Fetch instruction: 
+Decode instruction: 
+Execute instruction: 
+Memory instruction: add $16, $10, $9
+Writeback instruction: 
+$0:    0 $8:   10 $16:    0 $24:    0 
+$1:    0 $9:   -3 $17:    0 $25:    0 
+$2:    0 $10:   10 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycle 9:
+Fetch instruction: 
+Decode instruction: 
+Execute instruction: 
+Memory instruction: 
+Writeback instruction: add $16, $10, $9
+$0:    0 $8:   10 $16:    7 $24:    0 
+$1:    0 $9:   -3 $17:    0 $25:    0 
+$2:    0 $10:   10 $18:    0 $26:    0 
+$3:    0 $11:    0 $19:    0 $27:    0 
+$4:    0 $12:    0 $20:    0 $28:    0 
+$5:    0 $13:    0 $21:    0 $29:    0 
+$6:    0 $14:    0 $22:    0 $30:    0 
+$7:    0 $15:    0 $23:    0 $31:    0 
+
+Cycles: 10
+Instructions Executed: 5

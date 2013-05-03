@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     // Structure to forward registers
     int forwardReg[2];
 
+    int count = pc;
 	while (pc <= maxpc + 4) {
 		writeback(pipelineInsts[WRITE]);
 		memory(pipelineInsts[MEMORY]);
@@ -71,16 +72,32 @@ int main(int argc, char *argv[])
                 pipelineInsts[EXECUTE],
                 pipelineInsts[MEMORY],
                 pipelineInsts[WRITE],
-                pc - 1);
+                count++);
 
-		// Fill the remainder of the pipeline
-		writebackInst = *pipelineInsts[MEMORY];
-		memoryInst    = *pipelineInsts[EXECUTE];
-		executeInst   = *pipelineInsts[DECODE];
-		decodeInst    = *pipelineInsts[FETCH];
-		if (instnum <= maxpc) instnum++;
-		if (instnum > maxpc)  fetchInst.inst = 0;
-		pipelineInsts[FETCH]   = instPtr;
+
+        // Check to see if we need to stall anything
+        if (not isEmpty(EXECUTE) and not isEmpty(DECODE) and pipelineInsts[EXECUTE]->signals.mr == 1) {
+            if (pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input1 or 
+                    pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input2) {
+                // Stall the instruction at DECODE
+                writebackInst = *pipelineInsts[MEMORY];
+                memoryInst    = *pipelineInsts[EXECUTE];
+                executeInst.inst = 0; // NOP
+                pipelineInsts[FETCH] = &fetchInst;
+                // printf("JOSEPH STALLING\n");
+                // printf("fetch: %d pc: %d\n\n", fetchInst.inst, pc);
+                pc--;
+            }
+        } else {
+            // Fill the remainder of the pipeline
+            writebackInst = *pipelineInsts[MEMORY];
+            memoryInst    = *pipelineInsts[EXECUTE];
+            executeInst   = *pipelineInsts[DECODE];
+            decodeInst    = *pipelineInsts[FETCH];
+            if (instnum <= maxpc) instnum++;
+            if (instnum > maxpc)  fetchInst.inst = 0;
+            pipelineInsts[FETCH]   = instPtr;
+        }
 
         // Begin pipelining
         // Detect RAW
@@ -93,17 +110,16 @@ int main(int argc, char *argv[])
         // R4 <- R2 + R3   |   ->x
         if (not isEmpty(MEMORY) and not isEmpty(EXECUTE)) {
             // Check for RAW based on type of instruction
-            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input1) {
-                // printf("FORWARDING THIS MOTHERFUCKER\n\n");
-                if (pipelineInsts[EXECUTE]->signals.mtr == 0) { // Forward aluout
+            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input1)
+                if (pipelineInsts[MEMORY]->signals.mtr == 0)  // Forward aluout
                     pipelineInsts[EXECUTE]->s1data = pipelineInsts[MEMORY]->aluout;
-                    // printf("THE NEW S1 is: %d\n\n", pipelineInsts[EXECUTE]->s1data);
-                }
-            } 
-            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input2) {
-                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                if (pipelineInsts[MEMORY]->signals.mtr == 1)  // Forward memout
+                    pipelineInsts[EXECUTE]->s1data = pipelineInsts[MEMORY]->memout;
+            if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->input2)
+                if (pipelineInsts[MEMORY]->signals.mtr == 0) // Forward aluout
                     pipelineInsts[EXECUTE]->s2data = pipelineInsts[MEMORY]->aluout;
-            } 
+                if (pipelineInsts[MEMORY]->signals.mtr == 1) // Forward memout
+                    pipelineInsts[EXECUTE]->s2data = pipelineInsts[MEMORY]->memout;
             if (pipelineInsts[MEMORY]->destreg == pipelineInsts[EXECUTE]->destreg) {
                 if (pipelineInsts[EXECUTE]->signals.mw == 1) {
                     pipelineInsts[EXECUTE]->s2data = (pipelineInsts[MEMORY]->signals.mtr == 0) ?
@@ -115,12 +131,16 @@ int main(int argc, char *argv[])
         // Detect a writeback to memory forward (just happend in simulator lol)
         if (not isEmpty(WRITE) and not isEmpty(EXECUTE)) {
             if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->input1) {
-                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                if (pipelineInsts[WRITE]->signals.mtr == 0) // Forward aluout
                     pipelineInsts[EXECUTE]->s1data = pipelineInsts[WRITE]->aluout;
+                if (pipelineInsts[WRITE]->signals.mtr == 1) // Forward memout
+                    pipelineInsts[EXECUTE]->s1data = pipelineInsts[WRITE]->memout;
             } 
             if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->input2) {
-                if (pipelineInsts[EXECUTE]->signals.mtr == 0) // Forward aluout
+                if (pipelineInsts[WRITE]->signals.mtr == 0) // Forward aluout
                     pipelineInsts[EXECUTE]->s2data = pipelineInsts[WRITE]->aluout;
+                if (pipelineInsts[WRITE]->signals.mtr == 1) // Forward memout
+                    pipelineInsts[EXECUTE]->s2data = pipelineInsts[WRITE]->memout;
             } 
             if (pipelineInsts[WRITE]->destreg == pipelineInsts[EXECUTE]->destreg) {
                 if (pipelineInsts[EXECUTE]->signals.mw == 1) {
@@ -132,11 +152,10 @@ int main(int argc, char *argv[])
                 }
             }
         }
-
     }
 
 	// put in your own variables
-	printf("Cycles: %d\n", pc);
+	printf("Cycles: %d\n", count);
 	printf("Instructions Executed: %d\n", maxpc + 1);
 	exit(0);
 }
