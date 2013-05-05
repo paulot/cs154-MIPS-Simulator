@@ -1,8 +1,13 @@
+// Project 2
+// Made by:
+//      Paulo Tanaka
+//      Methias Talamantes
+//      Danny Wong
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include "functions.c"
+#include "functions.h"
 
 InstInfo * pipelineInsts[5];
 
@@ -29,13 +34,13 @@ int main(int argc, char *argv[])
 {
 	InstInfo fetchInst;
 	InstInfo decodeInst;
-        decodeInst.inst = 0;
+    decodeInst.inst = 0;
 	InstInfo executeInst;
-        executeInst.inst = 0;
+    executeInst.inst = 0;
 	InstInfo memoryInst;
-        memoryInst.inst = 0;
+    memoryInst.inst = 0;
 	InstInfo writebackInst;
-        writebackInst.inst = 0;
+    writebackInst.inst = 0;
 	InstInfo *instPtr = &fetchInst;
 
 	int instnum = 0;
@@ -56,16 +61,27 @@ int main(int argc, char *argv[])
     pipelineInsts[MEMORY]  = &memoryInst;
     pipelineInsts[WRITE]   = &writebackInst;
 
-    // Structure to forward registers
-    int forwardReg[2];
-
     int count = pc;
+    int oldpc, instexec = 0;
 	while (pc <= maxpc + 4) {
 		writeback(pipelineInsts[WRITE]);
 		memory(pipelineInsts[MEMORY]);
+        oldpc = pc;
 		execute(pipelineInsts[EXECUTE]);
+        if (oldpc != pc) { // Need to get rid of decode
+            // printf("JUMPING THAT SHIT!\n\n");
+            // printf("getting rid of %d\n\n", decodeInst.inst);
+            decodeInst.inst = 0;
+            pc--;
+            instexec--;
+            // printf("oldpc = %d, pc = %d\n\n", oldpc, pc);
+            // printf("instmem at pc: %d\n\n", instmem[pc]);
+            // printf("instmem at oldpc: %d\n\n", instmem[oldpc]);
+        }
 		decode(pipelineInsts[DECODE]);
 		fetch(pipelineInsts[FETCH]);
+        // printf("oldpc = %d, pc = %d\n\n", oldpc, pc);
+        instexec++;
 
         printP2(pipelineInsts[FETCH],
                 pipelineInsts[DECODE],
@@ -76,18 +92,18 @@ int main(int argc, char *argv[])
 
 
         // Check to see if we need to stall anything
-        if (not isEmpty(EXECUTE) and not isEmpty(DECODE) and pipelineInsts[EXECUTE]->signals.mr == 1) {
-            if (pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input1 or 
-                    pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input2) {
-                // Stall the instruction at DECODE
-                writebackInst = *pipelineInsts[MEMORY];
-                memoryInst    = *pipelineInsts[EXECUTE];
-                executeInst.inst = 0; // NOP
-                pipelineInsts[FETCH] = &fetchInst;
-                // printf("JOSEPH STALLING\n");
-                // printf("fetch: %d pc: %d\n\n", fetchInst.inst, pc);
-                pc--;
-            }
+        if ((not isEmpty(EXECUTE) and not isEmpty(DECODE) and pipelineInsts[EXECUTE]->signals.mr == 1) and
+             (pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input1 or 
+                    pipelineInsts[EXECUTE]->destreg == pipelineInsts[DECODE]->input2)) {
+            // Stall the instruction at DECODE
+            writebackInst = *pipelineInsts[MEMORY];
+            memoryInst    = *pipelineInsts[EXECUTE];
+            executeInst.inst = 0; // NOP
+            pipelineInsts[FETCH] = &fetchInst;
+            // printf("JOSEPH STALLING\n");
+            // printf("fetch: %d pc: %d\n\n", fetchInst.inst, pc);
+            pc--;
+            instexec--;
         } else {
             // Fill the remainder of the pipeline
             writebackInst = *pipelineInsts[MEMORY];
@@ -153,10 +169,10 @@ int main(int argc, char *argv[])
             }
         }
     }
-
+    instexec -= 4;
 	// put in your own variables
 	printf("Cycles: %d\n", count);
-	printf("Instructions Executed: %d\n", maxpc + 1);
+	printf("Instructions Executed: %d\n", instexec);
 	exit(0);
 }
 
