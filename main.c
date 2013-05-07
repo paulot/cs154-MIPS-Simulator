@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
         // Begin pipelining
         // Detect RAW
 
-        // RAW happends from memory to execute, we need to check 
+        // RAW happens from memory to execute, we need to check 
         // if the instruction that was last in execute (now at memory)
         // has a dependency with the instruction currently at execute
         // For example:

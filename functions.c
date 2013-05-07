@@ -37,7 +37,7 @@ int datamem[1000];
 int pc;
 
 // Return Address
-int ra;
+int opc;
 
 typedef enum { R_format = 1, I_format = 2, J_format = 3 } InstFormat;
 // 000 = and, 100 = or, 001 = add, 101 = sub, 010 = not, 011 = xor, 110 = slt
@@ -67,7 +67,6 @@ void setPCWithInfo(Jumps jump, int aluout, int jsize) {
                 pc += jsize;
             break;
         case JAL:
-            regfile[31] = pc;   // Set the return address
             pc = jsize;
             break;
         case J:
@@ -300,6 +299,7 @@ void execute(InstInfo *instruction)
 
     switch (instruction->signals.aluop) {
         case INV:   // j or jal
+            instruction->aluout = pc - 1;   // The return address
             break;      // Don't do anything
         case AND:
             instruction->aluout = in1 & in2;
@@ -328,7 +328,7 @@ void execute(InstInfo *instruction)
     
     // TODO: do the following using btype
     if (is_bge)         setPCWithInfo(BGE, instruction->aluout, instruction->fields.imm);
-    else if (is_jal)    setPCWithInfo(JAL, instruction->aluout, instruction->fields.imm);
+    else if (is_jal)    setPCWithInfo(JAL, instruction->aluout, instruction->fields.imm + 1);
     else if (is_j)      setPCWithInfo(J,   instruction->aluout, instruction->fields.imm);
 }
 
@@ -369,6 +369,8 @@ void writeback(InstInfo *instruction)
             regfile[instruction->destreg] = instruction->aluout;
         else if (instruction->signals.mtr == 1)
             regfile[instruction->destreg] = instruction->memout;
+        else if (is_jal)
+            regfile[31] = instruction->aluout;   // Set the return address
     }
 
 }
